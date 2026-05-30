@@ -97,7 +97,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		if m.mode == modeNormal && msg.Type == tea.KeyRunes && len(msg.Runes) == 1 && msg.Runes[0] == '/' && m.textarea.Value() == "" {
+		if m.mode == modeNormal && msg.Type == tea.KeyRunes && len(msg.Runes) == 1 && msg.Runes[0] == '/' &&
+			m.textarea.Value() == "" {
 			m.mode = modeCommandPalette
 			m.menuIndex = 0
 			m.textarea, cmd = m.textarea.Update(msg)

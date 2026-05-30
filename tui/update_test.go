@@ -297,7 +297,8 @@ func TestStatusBarShowsProviderModelAndRedactedKeyState(t *testing.T) {
 	}
 
 	status := statusBar(m)
-	if !strings.Contains(status, "ZAI") || !strings.Contains(status, "glm-4.5") || !strings.Contains(status, "key set") {
+	if !strings.Contains(status, "ZAI") || !strings.Contains(status, "glm-4.5") ||
+		!strings.Contains(status, "key set") {
 		t.Fatalf("status bar missing config summary: %q", status)
 	}
 	if strings.Contains(status, "zai-secret") {
