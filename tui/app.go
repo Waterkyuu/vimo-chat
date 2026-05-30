@@ -12,7 +12,7 @@ type streamChunkMsg struct {
 	chunk string
 }
 
-type streamDoneMsg struct {}
+type streamDoneMsg struct{}
 
 type errMsg struct {
 	err error
@@ -25,15 +25,13 @@ type Model struct {
 	textarea textarea.Model
 	// Data
 	messages []*schema.Message
-	err error
+	err      error
 	// Status mark
-	streaming bool
-	ready bool
-	showSplash bool
+	streaming   bool
+	ready       bool
+	showSplash  bool
 	windowWidth int
 }
-
-
 
 func NewModel() Model {
 	ta := textarea.New()
@@ -45,9 +43,9 @@ func NewModel() Model {
 	ta.CharLimit = 10000
 
 	return Model{
-		textarea:   ta,
-		messages:   []*schema.Message{},
-		showSplash: true,
+		textarea:    ta,
+		messages:    []*schema.Message{},
+		showSplash:  true,
 		windowWidth: 80,
 	}
 }

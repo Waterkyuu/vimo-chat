@@ -12,9 +12,9 @@ var (
 	userStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12")).Bold(true)
 
 	assistantStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-	
+
 	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
-	
+
 	statusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 )
 
@@ -46,12 +46,12 @@ func renderMessage(messages []*schema.Message) string {
 			b.WriteString(userStyle.Render("You: "))
 			b.WriteString(msg.Content)
 
-		case "assistant": 
+		case "assistant":
 			b.WriteString(assistantStyle.Render("Vimo: "))
 			b.WriteString(msg.Content)
 		}
-		
-		if i < len(messages) - 1 {
+
+		if i < len(messages)-1 {
 			b.WriteString("\n\n")
 		}
 	}
@@ -61,7 +61,7 @@ func renderMessage(messages []*schema.Message) string {
 
 func separator(width int) string {
 	return strings.Repeat("─", width)
-}		
+}
 
 func statusBar(m Model) string {
 	var parts []string
@@ -71,7 +71,7 @@ func statusBar(m Model) string {
 	if m.streaming {
 		parts = append(parts, "● Streaming...")
 	}
-	
+
 	if m.err != nil {
 		parts = append(parts, errorStyle.Render(fmt.Sprintf("Error: %v", m.err)))
 	}
