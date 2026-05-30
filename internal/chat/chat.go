@@ -8,3 +8,7 @@ import (
 type ChatModelProvider interface {
 	GetChatModel() *openai.ChatModel
 }
+
+func Chat() {
+
+}

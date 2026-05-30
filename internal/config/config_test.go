@@ -70,7 +70,11 @@ func TestSaveAndLoadRoundTrip(t *testing.T) {
 
 func TestLoadMergesMissingProviderDefaults(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.json")
-	if err := os.WriteFile(path, []byte(`{"active_provider":"zai","providers":{"zai":{"api_key":"zai-key"}}}`), 0o600); err != nil {
+	if err := os.WriteFile(
+		path,
+		[]byte(`{"active_provider":"zai","providers":{"zai":{"api_key":"zai-key"}}}`),
+		0o600,
+	); err != nil {
 		t.Fatalf("WriteFile returned error: %v", err)
 	}
 
