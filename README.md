@@ -2,7 +2,7 @@
   <img src="./assets/logo.png"  />
     <h1>Vimo</h1>
   <p><em>
-基于 Go 编写的 AI Chat 交互 TUI，使用 Sqlite 实现 OpenAI Memory 机制</em></p>
+基于 Go 编写的 AI Chat 交互 TUI，使用 Sqlite 实现 OpenAI Memory 机制，快速启动，无模块加载耗时，无需任何环境配置</em></p>
 </div>
 
 ## 特点
@@ -24,7 +24,7 @@
 - 技能加载
 - 文件读写
 - Grep 搜索
-- 网络搜索 （配置Key，优先Exa，降级 Parallel）
+- 网络搜索 （配置Key，优先 Exa，降级 Parallel，降级 DuckDuckgo）
 - 浏览器自动化 （配置Key，需要 Browserbase Cloud 账号）
   
 4. 功能
@@ -35,10 +35,13 @@
 - MCP 配置
 - Skill 添加
 - 管理工具
+- 主模型和辅助模型设置
+- 增强提示词
 
 ## 快速开始
-```bash
-go run ./cmd
+无需任何环境，直接运行
+```
+vimo.exe
 ```
 
 ## 使用指南
