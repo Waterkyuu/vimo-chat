@@ -5,6 +5,8 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cloudwego/eino/schema"
+
+	appconfig "vimo-chat/internal/config"
 )
 
 // Message type
@@ -18,6 +20,16 @@ type errMsg struct {
 	err error
 }
 
+type inputMode int
+
+const (
+	modeNormal inputMode = iota
+	modeCommandPalette
+	modeProviderMenu
+	modeModelMenu
+	modeKeyInput
+)
+
 // Data model
 type Model struct {
 	// UI comp
@@ -26,14 +38,31 @@ type Model struct {
 	// Data
 	messages []*schema.Message
 	err      error
+	notice   string
 	// Status mark
-	streaming   bool
-	ready       bool
-	showSplash  bool
-	windowWidth int
+	streaming    bool
+	ready        bool
+	showSplash   bool
+	windowWidth  int
+	windowHeight int
+	// Config
+	config      appconfig.Config
+	configPath  string
+	mode        inputMode
+	menuIndex   int
+	keyProvider appconfig.Provider
+	keyInput    string
 }
 
 func NewModel() Model {
+	path, err := appconfig.DefaultPath()
+	if err != nil {
+		path = ""
+	}
+	return NewModelWithConfigPath(path)
+}
+
+func NewModelWithConfigPath(configPath string) Model {
 	ta := textarea.New()
 	ta.Placeholder = "Send a message... (Enter to send)"
 	ta.ShowLineNumbers = false
@@ -42,11 +71,22 @@ func NewModel() Model {
 	ta.Prompt = "| "
 	ta.CharLimit = 10000
 
+	cfg := appconfig.Default()
+	var err error
+	if configPath != "" {
+		cfg, err = appconfig.Load(configPath)
+	}
+
 	return Model{
-		textarea:    ta,
-		messages:    []*schema.Message{},
-		showSplash:  true,
-		windowWidth: 80,
+		textarea:     ta,
+		messages:     []*schema.Message{},
+		err:          err,
+		showSplash:   true,
+		windowWidth:  80,
+		windowHeight: 24,
+		config:       cfg,
+		configPath:   configPath,
+		keyProvider:  cfg.ActiveProvider,
 	}
 }
 
