@@ -1,0 +1,100 @@
+version: "3"
+
+vars:
+  BINARY_NAME: vimo-memory
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
+  BUILD_DIR: bin
+
+tasks:
+  default:
+    cmds:
+      - task: help
+
+  help:
+    cmds:
+      - |
+        echo "{{.BINARY_NAME}} - {{.VERSION}}"
+        echo ""
+        echo "Usage:"
+        echo "  task fmt              Format code"
+        echo "  task lint             Static check"
+        echo "  task lint-fix         Auto-fix code issues"
+        echo "  task test             Run tests"
+        echo "  task test-cover       Run tests with coverage"
+        echo "  task build            Build project"
+        echo "  task run              Run the application"
+        echo "  task clean            Clean build files"
+        echo "  task tidy             Run go mod tidy"
+        echo "  task hooks            Setup git hooks"
+
+  fmt:
+    desc: Format code
+    cmds:
+      - echo "Formatting code..."
+      - gofmt -w .
+      - command -v golangci-lint >/dev/null 2>&1 && golangci-lint fmt || true
+      - echo "Done"
+
+  lint:
+    desc: Static check
+    cmds:
+      - echo "Running static check..."
+      - go vet ./...
+      - command -v golangci-lint >/dev/null 2>&1 && golangci-lint run --timeout=5m || echo "golangci-lint not installed, skipping"
+      - echo "Done"
+
+  lint-fix:
+    desc: Auto-fix code issues
+    cmds:
+      - echo "Auto-fixing code issues..."
+      - command -v golangci-lint >/dev/null 2>&1 && golangci-lint run --fix --timeout=5m || echo "golangci-lint not installed"
+      - echo "Done"
+
+  test:
+    desc: Run tests
+    cmds:
+      - echo "Running tests..."
+      - go test ./... -v -count=1
+      - echo "Done"
+
+  test-cover:
+    desc: Run tests with coverage
+    cmds:
+      - echo "Generating coverage report..."
+      - go test ./... -coverprofile=coverage.out -covermode=atomic
+      - go tool cover -func=coverage.out
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Report: coverage.html"
+
+  build:
+    desc: Build project
+    cmds:
+      - echo "Building..."
+      - go build -ldflags "-X main.Version={{.VERSION}}" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/server
+      - echo "Done: {{.BUILD_DIR}}/{{.BINARY_NAME}}"
+
+  run:
+    desc: Run the application
+    cmds:
+      - go run ./cmd/server
+
+  clean:
+    desc: Clean build files
+    cmds:
+      - echo "Cleaning..."
+      - Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path {{.BUILD_DIR}}
+      - Remove-Item -Force -ErrorAction SilentlyContinue -Path coverage.out,coverage.html
+      - go clean -cache -testcache
+      - echo "Done"
+
+  tidy:
+    desc: Run go mod tidy
+    cmds:
+      - go mod tidy
+
+  hooks:
+    desc: Setup git hooks
+    cmds:
+      - git config core.hooksPath .githooks
+      - echo "Git hooks configured (.githooks/)"
