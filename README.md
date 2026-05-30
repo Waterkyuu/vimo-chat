@@ -20,10 +20,12 @@
 - LLM级别摘要
 
 3. 内置工具调用
-- Bash 命令
+- Shell 命令
+- Git 命令 （diff、log、status）
 - 技能加载
 - 文件读写
 - Grep 搜索
+- sequentialthinking （逐步思考）
 - 网络搜索 （配置Key，优先 Exa，降级 Parallel，降级 DuckDuckgo）
 - 浏览器自动化 （配置Key，需要 Browserbase Cloud 账号）
   

@@ -65,14 +65,14 @@ tasks:
       - go test ./... -coverprofile=coverage.out -covermode=atomic
       - go tool cover -func=coverage.out
       - go tool cover -html=coverage.out -o coverage.html
-      - echo "Report: coverage.html"
+      - 'echo "Report: coverage.html"'
 
   build:
     desc: Build project
     cmds:
       - echo "Building..."
-      - go build -ldflags "-X main.Version={{.VERSION}}" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/
-      - echo "Done: {{.BUILD_DIR}}/{{.BINARY_NAME}}"
+      - 'go build -ldflags "-X main.Version={{.VERSION}}" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/'
+      - 'echo "Done: {{.BUILD_DIR}}/{{.BINARY_NAME}}"'
 
   run:
     desc: Run the application
