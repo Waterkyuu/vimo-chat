@@ -9,12 +9,28 @@ import (
 
 type Provider string
 
+type Transport string
+
 const (
-	ProviderOpenAI    Provider = "openai"
-	ProviderZAI       Provider = "zai"
-	ProviderDeepseek  Provider = "deepseek"
-	defaultConfigPerm          = 0o600
+	ProviderOpenAI   Provider = "openai"
+	ProviderZAI      Provider = "zai"
+	ProviderDeepseek Provider = "deepseek"
+
+	TransportStdio          Transport = "stdio"
+	TransportSSE            Transport = "sse"
+	TransportStreamableHTTP Transport = "streamable_http"
+
+	defaultConfigPerm = 0o600
 )
+
+type MCPServerConfig struct {
+	Transport Transport         `json:"transport"`
+	Command   string            `json:"command,omitempty"`
+	Args      []string          `json:"args,omitempty"`
+	Env       map[string]string `json:"env,omitempty"`
+	URL       string            `json:"url,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
+}
 
 type ProviderConfig struct {
 	APIKey string `json:"api_key"`
@@ -24,6 +40,7 @@ type ProviderConfig struct {
 type Config struct {
 	ActiveProvider Provider                    `json:"active_provider"`
 	Providers      map[Provider]ProviderConfig `json:"providers"`
+	MCPServers     map[string]MCPServerConfig  `json:"mcp_servers,omitempty"`
 }
 
 func Default() Config {

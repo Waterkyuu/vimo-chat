@@ -14,6 +14,10 @@ type ChatModelProvider interface {
 	GetChatModel() *openai.ChatModel
 }
 
+// type chatModelProvider struct {
+// 	chatModel *openai.ChatModel
+// }
+
 func NewChatModelProvider(ctx context.Context, cfg config.Config) (*openai.ChatModel, error) {
 
 	provider := cfg.ActiveProvider
@@ -44,3 +48,8 @@ func NewChatModelProvider(ctx context.Context, cfg config.Config) (*openai.ChatM
 	return openai.NewChatModel(ctx, modelConfig)
 
 }
+
+// // GetChatModel returns the chat model
+// func (p *chatModelProvider) GetChatModel() *openai.ChatModel {
+// 	return p.chatModel
+// }

@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="./assets/logo.png"  />
-    <h1>Vimo</h1>
+  <img src="./assets/logo.svg"  width="300"/>
+    <h1>Vimo🥁</h1>
   <p><em>
 基于 Go 编写的 AI Chat 交互 TUI，使用 Sqlite 实现 OpenAI Memory 机制，快速启动，无模块加载耗时，无需任何环境配置</em></p>
 </div>

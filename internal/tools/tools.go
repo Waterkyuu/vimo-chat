@@ -4,13 +4,13 @@ import (
 	"context"
 	"log"
 
+	"vimo-chat/internal/mcp"
+
 	"github.com/cloudwego/eino-ext/components/tool/sequentialthinking"
 	"github.com/cloudwego/eino/components/tool"
-	"github.com/mark3labs/mcp-go/client"
 )
 
-// LoadLocalTools loads all local tools for the agent.
-func LoadLocalTools(ctx context.Context) []tool.BaseTool {
+func LoadLocalTools() []tool.BaseTool {
 
 	localToolsList := []tool.BaseTool{
 		&ShellTool{},
@@ -23,7 +23,6 @@ func LoadLocalTools(ctx context.Context) []tool.BaseTool {
 		&GitLogTool{},
 		&LoadSkillTool{},
 	}
-
 	thinkTool, err := sequentialthinking.NewTool()
 	if err != nil {
 		log.Printf("failed to create sequential thinking tool: %v", err)
@@ -36,15 +35,15 @@ func LoadLocalTools(ctx context.Context) []tool.BaseTool {
 	return localToolsList
 }
 
-// LoadMCPTools loads MCP tools from the given MCP client.
-func LoadMCPTools(ctx context.Context, mcpClient *client.Client) []tool.BaseTool {
-	// Note: To use MCP tools, you need to install the eino-ext MCP package:
-	// go get github.com/cloudwego/eino-ext/components/tool/mcp
-	//
-	// Then use it as:
-	// mcpp "github.com/cloudwego/eino-ext/components/tool/mcp"
-	// mcpTools, err := mcpp.GetTools(ctx, &mcpp.Config{Cli: mcpClient})
+func LoadMCPTools(ctx context.Context, mcpManager *mcp.Manager) []tool.BaseTool {
+	if mcpManager == nil {
+		return nil
+	}
+	return mcpManager.LoadTools(ctx)
+}
 
-	log.Printf("MCP tools loading is not yet implemented. Please install eino-ext MCP package first.")
-	return nil
+func LoadTools(ctx context.Context, mcpManager *mcp.Manager) []tool.BaseTool {
+	tools := LoadLocalTools()
+	tools = append(tools, LoadMCPTools(ctx, mcpManager)...)
+	return tools
 }
