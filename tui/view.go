@@ -60,12 +60,21 @@ func renderMessage(messages []*schema.Message) string {
 	var b strings.Builder
 	for i, msg := range messages {
 		switch msg.Role {
-		case "user":
+		case schema.User:
 			b.WriteString(userStyle.Render("You: "))
 			b.WriteString(msg.Content)
 
-		case "assistant":
+		case schema.Assistant:
 			b.WriteString(assistantStyle.Render("Vimo: "))
+			b.WriteString(msg.Content)
+
+		case schema.Tool:
+			b.WriteString(statusStyle.Render("Tool: "))
+			if msg.ToolName != "" {
+				b.WriteString(msg.ToolName)
+				b.WriteString("\n")
+			}
+
 			b.WriteString(msg.Content)
 		}
 

@@ -33,9 +33,9 @@ var providerOptions = []providerOption{
 }
 
 var modelOptions = map[appconfig.Provider][]string{
-	appconfig.ProviderOpenAI:   {"gpt-4.1-mini", "gpt-4.1", "gpt-4o-mini"},
-	appconfig.ProviderZAI:      {"glm-4.5-flash", "glm-4.5", "glm-4-plus"},
-	appconfig.ProviderDeepseek: {"deepseek-chat", "deepseek-reasoner"},
+	appconfig.ProviderOpenAI:   {"gpt-5.5", "gpt-5.4", "gpt-5.1"},
+	appconfig.ProviderZAI:      {"glm-5.1", "glm-4.7", "glm-4.6"},
+	appconfig.ProviderDeepseek: {"deepseek-v4-pro", "deepseek-v4-flash"},
 }
 
 func (m *Model) handleCommand(input string) bool {
