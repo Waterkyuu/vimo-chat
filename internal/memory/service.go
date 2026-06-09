@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cloudwego/eino-ext/components/model/openai"
+	"github.com/cloudwego/eino/schema"
 	"github.com/google/uuid"
 )
 
@@ -123,6 +124,52 @@ func (s *Service) GetContextForPrompt(ctx context.Context) (string, error) {
 }
 
 // Close the service and release the database connection
+// 对话结束后调用，执行记忆提取和摘要生成
+// Phase 1: 从对话中提取记忆
+// Phase 2: 生成对话摘要
+func (s *Service) ProcessConversation(ctx context.Context, convID string, messages []*schema.Message) error {
+	now := time.Now()
+
+	conv := &Conversation{
+		ID:           convID,
+		MessageCount: len(messages),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	if err := s.store.SaveConversation(ctx, conv); err != nil {
+		return err
+	}
+
+	// Phase 1: Use LLM to extract memory
+	extracted, err := s.extractor.ExtractMemoried(ctx, messages)
+	if err != nil {
+		return fmt.Errorf("Extract memoried: %w", err)
+	}
+
+	for _, m := range extracted {
+		m.ConversationID = convID
+		m.ID = uuid.New().String()
+		m.CreatedAt = now
+		m.UpdatedAt = now
+		if err := s.store.SaveMemory(ctx, m); err != nil {
+			return err
+		}
+	}
+
+	// Phase 2: Gen conversation summary
+	summary, err := s.extractor.SummarizeConversation(ctx, messages)
+	if err != nil {
+		return fmt.Errorf("Summarize: %w", err)
+	}
+
+	conv.Summary = summary
+	now2 := time.Now()
+	conv.SummarizedAt = &now2
+
+	return s.store.SaveConversation(ctx, conv)
+
+}
 func (s *Service) Close() error {
 	return s.store.Close()
 }
