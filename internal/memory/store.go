@@ -37,7 +37,6 @@ func NewSQLiteStore(dbPath string) (*SQLiteStore, error) {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
 
-	// 开启 WAL 模式提升并发读性能
 	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
 		return nil, fmt.Errorf("set WAL mode: %w", err)
 	}
