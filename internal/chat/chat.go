@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
+	"vimo-chat/internal/memory"
 	"vimo-chat/internal/skill"
 
 	"github.com/cloudwego/eino-ext/components/model/openai"
@@ -19,13 +21,15 @@ type ChatService struct {
 	model     *openai.ChatModel
 	sysPrompt string
 	tools     []tool.BaseTool
+	memSvc    *memory.Service
 }
 
-func NewChatService(model *openai.ChatModel, tools []tool.BaseTool) *ChatService {
+func NewChatService(model *openai.ChatModel, tools []tool.BaseTool, memSvc *memory.Service) *ChatService {
 	return &ChatService{
 		model:     model,
 		sysPrompt: skill.BuildSysPrompt(),
 		tools:     tools,
+		memSvc:    memSvc,
 	}
 }
 
@@ -143,10 +147,22 @@ func (cs *ChatService) buildAgent(
 		return nil, nil, fmt.Errorf("failed to create react agent: %w", err)
 	}
 
+	sysContent := cs.sysPrompt
+
+	// If there is a memory service, spell the memory into the system prompt words
+	if cs.memSvc != nil {
+		memCtx, err := cs.memSvc.GetContextForPrompt(ctx)
+		if err != nil {
+			log.Printf("failed to get memory context: %v", err)
+		} else if memCtx != "" {
+			sysContent += "\n\n" + memCtx
+		}
+	}
+
 	sysMessages := []*schema.Message{
 		{
 			Role:    schema.System,
-			Content: cs.sysPrompt,
+			Content: sysContent,
 		},
 	}
 
