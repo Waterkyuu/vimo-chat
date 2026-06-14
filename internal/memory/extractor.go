@@ -3,10 +3,13 @@ package memory
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/cloudwego/eino-ext/components/model/openai"
 	"github.com/cloudwego/eino/schema"
+	"github.com/google/uuid"
 )
 
 type Extractor struct {
@@ -135,9 +138,110 @@ func buildConsolidationPrompt(memories []*Memory) string {
 	return fmt.Sprintf("Integrate the following memories and merge duplicates: \n\n%s", list)
 }
 
-// ParseExtractedMemories: parses the JSON returned by the LLM into a list of memories
+// parseExtractedMemories parses the JSON array returned by the LLM into a list
+// of memories. Each item must contain a "content" field. The LLM may wrap the
+// payload in markdown code fences or surround it with prose, so the JSON body
+// is isolated before decoding. Each memory gets a fresh UUID and the type
+// MemoryTypeExtractedKnowledge; timestamps are left to the caller.
+//
+// Example input (raw LLM response):
+//
+//	```json
+//	[
+//	  {"content": "User prefers Go"},
+//	  {"content": "  "},
+//	  {"content": "User likes dark theme"}
+//	]
+//	```
+//
+// Example output ([]*Memory):
+//
+//	[]*Memory{
+//	    {ID: "a1b2c3d4-...", Type: MemoryTypeExtractedKnowledge, Content: "User prefers Go"},
+//	    // The second item is empty after trimming and is skipped.
+//	    {ID: "e5f6g7h8-...", Type: MemoryTypeExtractedKnowledge, Content: "User likes dark theme"},
+//	}
+//
+// An empty array ("[]") yields (nil, nil). Invalid JSON yields (nil, error).
 func parseExtractedMemories(content string) ([]*Memory, error) {
-	// TODO: Use json.Unmarshal parse `[{"content": "..."}, ...]`
-	// Generated UUID, for each type of set as MemoryTypeExtractedKnowledge
-	return nil, nil
+	body := isolateJSONArray(content)
+	if body == "" || body == "[]" {
+		return nil, nil
+	}
+
+	var items []struct {
+		Content string `json:"content"`
+	}
+	if err := json.Unmarshal([]byte(body), &items); err != nil {
+		return nil, fmt.Errorf("parse extracted memories: %w", err)
+	}
+
+	memories := make([]*Memory, 0, len(items))
+	for _, item := range items {
+		text := strings.TrimSpace(item.Content)
+		if text == "" {
+			continue
+		}
+		memories = append(memories, &Memory{
+			ID:      uuid.New().String(),
+			Type:    MemoryTypeExtractedKnowledge,
+			Content: text,
+		})
+	}
+
+	return memories, nil
+}
+
+// isolateJSONArray extracts the JSON array payload from a raw LLM response,
+// stripping markdown code fences (```json ... ```) and any leading/trailing
+// prose by locating the outermost [ ... ] boundaries.
+//
+// Example input 1 (markdown code fences):
+//
+//	```json
+//	[{"content": "User uses Vim"}]
+//	```
+//
+// Example output 1:
+//
+//	[{"content": "User uses Vim"}]
+//
+// Example input 2 (surrounding prose):
+//
+//	Here are the memories:
+//	[{"content": "User uses Vim"}]
+//	Hope this helps!
+//
+// Example output 2:
+//
+//	[{"content": "User uses Vim"}]
+//
+// Example input 3 (empty array):
+//
+//	[]
+//
+// Example output 3:
+//
+//	[]
+func isolateJSONArray(raw string) string {
+	s := strings.TrimSpace(raw)
+
+	// Strip markdown code fences: ```json\n...\n``` or ```\n...\n```.
+	if strings.HasPrefix(s, "```") {
+		if nl := strings.Index(s, "\n"); nl != -1 {
+			s = s[nl+1:]
+		}
+		if i := strings.LastIndex(s, "```"); i != -1 {
+			s = s[:i]
+		}
+		s = strings.TrimSpace(s)
+	}
+
+	start := strings.Index(s, "[")
+	end := strings.LastIndex(s, "]")
+	if start != -1 && end != -1 && end > start {
+		return s[start : end+1]
+	}
+
+	return s
 }
