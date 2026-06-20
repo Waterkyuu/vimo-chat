@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"vimo-chat/internal/instructions"
 	"vimo-chat/internal/memory"
 	"vimo-chat/internal/skill"
 
@@ -148,6 +149,12 @@ func (cs *ChatService) buildAgent(
 	}
 
 	sysContent := cs.sysPrompt
+
+	// Inject project/global rule files (AGENTS.md and aliases) so the agent
+	// follows repository-specific conventions.
+	if rules := instructions.Load(); rules != "" {
+		sysContent += "\n\n" + rules
+	}
 
 	// If there is a memory service, spell the memory into the system prompt words
 	if cs.memSvc != nil {
