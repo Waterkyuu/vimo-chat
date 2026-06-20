@@ -1,9 +1,14 @@
 package tui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cloudwego/eino/schema"
+	"github.com/google/uuid"
+
+	"vimo-chat/internal/chat"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -30,10 +35,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.refreshLayout()
 				return m, nil
 			}
-			if m.streaming {
-				m.streaming = false
-				return m, nil
-			}
+			// if m.streaming {
+			// 	m.streaming = false
+			// 	return m, nil
+			// }
 		case tea.KeyUp:
 			if m.mode == modeCommandPalette || m.mode == modeProviderMenu || m.mode == modeModelMenu {
 				m.moveMenu(-1)
@@ -79,10 +84,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.messages = append(m.messages, schema.UserMessage(input))
 				m.textarea.Reset()
-				m.messages = append(m.messages, schema.AssistantMessage("This is Mock message", nil))
+				m.streaming = true
+				m.err = nil
+				m.assistantText = ""
+				if m.convID == "" {
+					m.convID = uuid.NewString()
+				}
 				m.updateViewportContent()
 				m.viewport.GotoBottom()
-				return m, nil
+				return m, m.streamChat()
 			}
 		}
 		if m.mode == modeKeyInput {
@@ -118,21 +128,53 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, nil
 
-	// Stream chunk arrives
-	case streamChunkMsg:
-		if len(m.messages) > 0 {
-			last := m.messages[len(m.messages)-1]
-			if last.Role == "assistant" {
-				last.Content += msg.chunk
-				m.updateViewportContent()
-				m.viewport.GotoBottom()
-			}
+	case toolLoadMsg:
+		m.tools = msg.tools
+		if msg.err != nil {
+			m.setNotice(fmt.Sprintf("MCP failed: %v", msg.err))
 		}
-		return m, nil
 
-	// Stream completion
+	// The chat stream has been opened: cache the memory service and the event
+	// channel, then start draining events one at a time for live updates.
+	case streamStartedMsg:
+		m.memSvc = msg.memSvc
+		m.streamEvents = msg.events
+		return m, waitForChatEvent(msg.events)
+
+	// Stream chunk arrives.
+	case chatEventMsg:
+		switch msg.event.Type {
+		case chat.EventAssistantDelta:
+			m.assistantText += msg.event.Content
+			m.updateViewportContent()
+			m.viewport.GotoBottom()
+			return m, waitForChatEvent(m.streamEvents)
+		case chat.EventToolStart, chat.EventToolResult:
+			return m, waitForChatEvent(m.streamEvents)
+		case chat.EventDone:
+			// Finalization happens on streamDoneMsg once the channel is closed.
+			return m, waitForChatEvent(m.streamEvents)
+		case chat.EventError:
+			m.streaming = false
+			m.err = msg.event.Err
+			return m, nil
+		}
+
+	// Stream completion: persist the assembled assistant reply and trigger
+	// background memory extraction/summarization for this conversation.
 	case streamDoneMsg:
+		if m.assistantText != "" {
+			m.messages = append(m.messages, schema.AssistantMessage(m.assistantText, nil))
+			m.assistantText = ""
+		}
 		m.streaming = false
+		m.updateViewportContent()
+		m.viewport.GotoBottom()
+		return m, m.processConversationMemory()
+
+	// Background memory processing finished; errors are already logged and
+	// non-fatal, so just absorb the message.
+	case memoryDoneMsg:
 		return m, nil
 
 	case errMsg:
@@ -165,13 +207,20 @@ func (m *Model) handleResize(width, height int) {
 	}
 
 	m.viewport = viewport.New(width, viewportHeight)
-	m.viewport.SetContent(renderMessage(m.messages))
+	m.updateViewportContent()
 	m.textarea.SetWidth(width)
 	m.textarea.SetHeight(textareaHeight)
 }
 
+// updateViewportContent renders the committed messages plus any in-progress
+// assistant reply (while streaming) so partial responses are visible live.
 func (m *Model) updateViewportContent() {
-	m.viewport.SetContent(renderMessage(m.messages))
+	msgs := m.messages
+	if m.streaming && m.assistantText != "" {
+		msgs = append(append([]*schema.Message{}, m.messages...),
+			schema.AssistantMessage(m.assistantText, nil))
+	}
+	m.viewport.SetContent(renderMessage(msgs))
 }
 
 func (m *Model) refreshLayout() {
