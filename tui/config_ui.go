@@ -30,12 +30,18 @@ var providerOptions = []providerOption{
 	{id: appconfig.ProviderOpenAI, label: "OpenAI"},
 	{id: appconfig.ProviderZAI, label: "ZAI"},
 	{id: appconfig.ProviderDeepseek, label: "Deepseek"},
+	{id: appconfig.ProviderZAICodingPlan, label: "ZAI Coding Plan"},
+	{id: appconfig.ProviderKimi, label: "Kimi"},
+	{id: appconfig.ProviderMiniMax, label: "MiniMax"},
 }
 
 var modelOptions = map[appconfig.Provider][]string{
-	appconfig.ProviderOpenAI:   {"gpt-5.5", "gpt-5.4", "gpt-5.1"},
-	appconfig.ProviderZAI:      {"glm-5.1", "glm-4.7", "glm-4.6"},
-	appconfig.ProviderDeepseek: {"deepseek-v4-pro", "deepseek-v4-flash"},
+	appconfig.ProviderOpenAI:        {"gpt-5.5", "gpt-5.4", "gpt-5.1"},
+	appconfig.ProviderZAI:           {"glm-5.1", "glm-4.7", "glm-4.6"},
+	appconfig.ProviderDeepseek:      {"deepseek-v4-pro", "deepseek-v4-flash"},
+	appconfig.ProviderZAICodingPlan: {"glm-5.2", "glm-5.1", "glm-4.7"},
+	appconfig.ProviderKimi:          {"kimi-k2.6", "kimi-k2.5", "moonshot-v1-128k"},
+	appconfig.ProviderMiniMax:       {"MiniMax-M3", "MiniMax-M2"},
 }
 
 func (m *Model) handleCommand(input string) bool {
