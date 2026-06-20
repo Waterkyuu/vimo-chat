@@ -14,8 +14,14 @@ func providerInfo(provider config.Provider) (ProviderInfo, bool) {
 		return openAIProvider(), true
 	case config.ProviderZAI:
 		return zaiProvider(), true
+	case config.ProviderZAICodingPlan:
+		return zaiCodingPlanProvider(), true
 	case config.ProviderDeepseek:
 		return deepseekProvider(), true
+	case config.ProviderKimi:
+		return kimiProvider(), true
+	case config.ProviderMiniMax:
+		return miniMaxProvider(), true
 	default:
 		return ProviderInfo{}, false
 	}
