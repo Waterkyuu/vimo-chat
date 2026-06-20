@@ -63,6 +63,24 @@ func (m *Model) handleCommand(input string) bool {
 		m.setNotice(m.configSummary())
 		m.textarea.Reset()
 		return true
+	case "/new":
+		m.messages = nil
+		// Reset so the next sent message starts a fresh conversation ID.
+		m.convID = ""
+		m.assistantText = ""
+		m.streaming = false
+		m.textarea.Reset()
+		m.refreshLayout()
+		return true
+	case "/clear":
+		// Clear the working context (message history) but keep the current
+		// conversation ID so prior extracted memories and summary stay archived.
+		m.messages = nil
+		m.assistantText = ""
+		m.streaming = false
+		m.textarea.Reset()
+		m.refreshLayout()
+		return true
 	default:
 		return false
 	}
