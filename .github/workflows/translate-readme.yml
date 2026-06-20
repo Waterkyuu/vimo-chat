@@ -1,0 +1,66 @@
+# Auto-translates README.md into other languages using any OpenAI-compatible API.
+#
+# Required repository secret:
+#   LLM_API_KEY  - API key for your provider.
+# Optional repository secrets (fall back to OpenAI defaults):
+#   LLM_API_BASE - e.g. https://api.openai.com/v1, https://api.deepseek.com/v1,
+#                  https://api.moonshot.cn/v1, https://openrouter.ai/api/v1 ...
+#   LLM_MODEL    - e.g. gpt-4o-mini, deepseek-chat, moonshot-v1-8k ...
+#
+# Output files are README_<LANG>.md (e.g. README_EN.md). They do not match the
+# trigger paths below, so the bot's own commits never re-trigger this workflow.
+
+name: Translate README
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'README.md'
+      - '.github/scripts/translate_readme.py'
+      - '.github/workflows/translate-readme.yml'
+  workflow_dispatch:
+    inputs:
+      languages:
+        description: 'Target languages as code:Name pairs (comma separated), e.g. en:English,ja:日本語'
+        required: false
+        default: 'en:English'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: translate-readme-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Translate README
+        env:
+          LLM_API_BASE: ${{ secrets.LLM_API_BASE }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          TARGET_LANGUAGES: ${{ github.event.inputs.languages || 'en:English' }}
+          SOURCE_LANGUAGE: Chinese
+        run: python .github/scripts/translate_readme.py
+
+      - name: Commit translated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'README_*.md'
+          if git diff --cached --quiet; then
+            echo "No translation changes to commit."
+          else
+            git commit -m "docs(readme): auto-translate via GitHub Actions"
+            git push
+          fi
