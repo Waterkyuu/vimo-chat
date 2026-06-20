@@ -12,9 +12,12 @@ type Provider string
 type Transport string
 
 const (
-	ProviderOpenAI   Provider = "openai"
-	ProviderZAI      Provider = "zai"
-	ProviderDeepseek Provider = "deepseek"
+	ProviderOpenAI        Provider = "openai"
+	ProviderZAI           Provider = "zai"
+	ProviderZAICodingPlan Provider = "zai_coding_plan"
+	ProviderDeepseek      Provider = "deepseek"
+	ProviderKimi          Provider = "kimi"
+	ProviderMiniMax       Provider = "minimax"
 
 	TransportStdio          Transport = "stdio"
 	TransportSSE            Transport = "sse"
@@ -47,9 +50,12 @@ func Default() Config {
 	return Config{
 		ActiveProvider: ProviderOpenAI,
 		Providers: map[Provider]ProviderConfig{
-			ProviderOpenAI:   {Model: "gpt-5.4"},
-			ProviderZAI:      {Model: "glm-5.1"},
-			ProviderDeepseek: {Model: "deepseek-v4-pro"},
+			ProviderOpenAI:        {Model: "gpt-5.4"},
+			ProviderZAI:           {Model: "glm-5.1"},
+			ProviderZAICodingPlan: {Model: "glm-5.2"},
+			ProviderDeepseek:      {Model: "deepseek-v4-pro"},
+			ProviderKimi:          {Model: "kimi-k2.6"},
+			ProviderMiniMax:       {Model: "MiniMax-M3"},
 		},
 	}
 }
@@ -128,7 +134,7 @@ func (c *Config) mergeDefaults() {
 
 func isKnownProvider(provider Provider) bool {
 	switch provider {
-	case ProviderOpenAI, ProviderZAI, ProviderDeepseek:
+	case ProviderOpenAI, ProviderZAI, ProviderZAICodingPlan, ProviderDeepseek, ProviderKimi, ProviderMiniMax:
 		return true
 	default:
 		return false
