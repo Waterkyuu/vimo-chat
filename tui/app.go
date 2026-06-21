@@ -1,6 +1,10 @@
 package tui
 
 import (
+	"context"
+	"log"
+	"time"
+
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -9,6 +13,7 @@ import (
 
 	"vimo-chat/internal/chat"
 	appconfig "vimo-chat/internal/config"
+	"vimo-chat/internal/mcp"
 	"vimo-chat/internal/memory"
 )
 
@@ -81,6 +86,9 @@ type Model struct {
 	// Chat/memory runtime state.
 	// memSvc is lazily created on the first sent message and reused afterwards.
 	memSvc *memory.Service
+	// mcpManager is started once at application startup and reused for the
+	// lifetime of the app; its tools are merged into the chat toolset.
+	mcpManager *mcp.Manager
 	// streamEvents holds the active chat event channel while streaming.
 	streamEvents <-chan chat.Event
 	// assistantText accumulates streamed assistant deltas for live rendering.
@@ -112,7 +120,7 @@ func NewModelWithConfigPath(configPath string) Model {
 		cfg, err = appconfig.Load(configPath)
 	}
 
-	return Model{
+	m := Model{
 		textarea:     ta,
 		messages:     []*schema.Message{},
 		err:          err,
@@ -123,10 +131,41 @@ func NewModelWithConfigPath(configPath string) Model {
 		configPath:   configPath,
 		keyProvider:  cfg.ActiveProvider,
 	}
+	// MCP servers are started once at startup. Failures are logged but never
+	// fatal: healthy servers still contribute their tools to the chat.
+	m.initMCP(cfg.MCPServers)
+	return m
+}
+
+// mcpStartTimeout bounds how long the application is willing to block while
+// bringing MCP servers up at startup.
+const mcpStartTimeout = 10 * time.Second
+
+// initMCP builds the MCP manager from configuration and starts it. A failed or
+// slow server never prevents the application from running: each server is
+// started independently and only the healthy ones are kept.
+func (m *Model) initMCP(servers map[string]appconfig.MCPServerConfig) {
+	manager := mcp.NewManager(servers)
+
+	ctx, cancel := context.WithTimeout(context.Background(), mcpStartTimeout)
+	defer cancel()
+	if err := manager.StartAndInit(ctx); err != nil {
+		log.Printf("mcp startup: %v", err)
+	}
+
+	m.mcpManager = manager
+}
+
+// Close releases long-lived resources such as MCP clients. It is safe to call
+// on a zero-value model and should be invoked once when the application exits.
+func (m Model) Close() error {
+	if m.mcpManager != nil {
+		return m.mcpManager.Close()
+	}
+	return nil
 }
 
 // Init app
 func (m Model) Init() tea.Cmd {
-	// Start MCP server
 	return tea.Batch(textarea.Blink, tea.EnterAltScreen)
 }

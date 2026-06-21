@@ -35,7 +35,7 @@ func (m Model) streamChat() tea.Cmd {
 			}
 		}
 
-		tools := vimoTools.LoadLocalTools(memSvc)
+		tools := vimoTools.LoadTools(ctx, memSvc, m.mcpManager)
 
 		chatSvc := chat.NewChatService(model, tools, memSvc)
 		events, err := chatSvc.StreamEvents(ctx, m.messages)

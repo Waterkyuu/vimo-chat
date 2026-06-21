@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	"testing"
 
 	"vimo-chat/internal/config"
@@ -64,6 +65,18 @@ func TestNewManagerSkipsInvalidTransport(t *testing.T) {
 	}
 	if _, ok := clients["good"]; !ok {
 		t.Fatal("missing good client")
+	}
+}
+
+func TestStartAndInitNoClientsIsNoop(t *testing.T) {
+	// With no configured servers, startup must return immediately without error
+	// so an empty MCP config never blocks or fails application startup.
+	m := NewManager(nil)
+	if err := m.StartAndInit(context.Background()); err != nil {
+		t.Fatalf("StartAndInit on empty manager returned error: %v", err)
+	}
+	if got := len(m.Clients()); got != 0 {
+		t.Fatalf("expected 0 clients, got %d", got)
 	}
 }
 

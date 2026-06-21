@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"vimo-chat/internal/config"
@@ -48,13 +49,23 @@ func (m *Manager) Clients() map[string]*client.Client {
 	return clients
 }
 
+// StartAndInit starts every client and performs the MCP handshake. Each server
+// is initialized independently: a failure is logged, the failing client is
+// dropped, and the remaining servers keep working. ctx bounds the startup time.
+// A non-nil error lists the servers that failed; healthy clients are still
+// available via LoadTools.
 func (m *Manager) StartAndInit(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	failed := make(map[string]*client.Client)
+	var errs []string
+
 	for name, c := range m.clients {
 		if err := c.Start(ctx); err != nil {
-			return fmt.Errorf("start %q: %w", name, err)
+			errs = append(errs, fmt.Sprintf("start %q: %v", name, err))
+			failed[name] = c
+			continue
 		}
 
 		initReq := mcp.InitializeRequest{
@@ -68,10 +79,20 @@ func (m *Manager) StartAndInit(ctx context.Context) error {
 		}
 
 		if _, err := c.Initialize(ctx, initReq); err != nil {
-			return fmt.Errorf("initialize %q: %w", name, err)
+			errs = append(errs, fmt.Sprintf("initialize %q: %v", name, err))
+			failed[name] = c
+			continue
 		}
 	}
 
+	for name, c := range failed {
+		_ = c.Close()
+		delete(m.clients, name)
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("mcp startup completed with errors: %s", strings.Join(errs, "; "))
+	}
 	return nil
 }
 

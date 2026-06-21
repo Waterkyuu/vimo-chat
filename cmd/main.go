@@ -19,12 +19,20 @@ func main() {
 		log.Printf("failed to load skills: %v", err)
 	}
 
+	model := tui.NewModel()
+
 	p := tea.NewProgram(
-		tui.NewModel(),
+		model,
 		tea.WithAltScreen(),
 	)
+	_, err := p.Run()
 
-	if _, err := p.Run(); err != nil {
+	// Release long-lived resources (MCP clients) before any exit path.
+	if cerr := model.Close(); cerr != nil {
+		log.Printf("failed to close mcp: %v", cerr)
+	}
+
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
