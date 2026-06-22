@@ -95,6 +95,8 @@ type Model struct {
 	assistantText string
 	// convID identifies the current conversation for memory extraction/summary.
 	convID string
+	// md renders assistant markdown (LLM output) into ANSI-styled text.
+	md *markdownRenderer
 }
 
 func NewModel() Model {
@@ -130,6 +132,7 @@ func NewModelWithConfigPath(configPath string) Model {
 		config:       cfg,
 		configPath:   configPath,
 		keyProvider:  cfg.ActiveProvider,
+		md:           newMarkdownRenderer(),
 	}
 	// MCP servers are started once at startup. Failures are logged but never
 	// fatal: healthy servers still contribute their tools to the chat.

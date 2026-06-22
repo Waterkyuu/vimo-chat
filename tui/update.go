@@ -220,7 +220,7 @@ func (m *Model) updateViewportContent() {
 		msgs = append(append([]*schema.Message{}, m.messages...),
 			schema.AssistantMessage(m.assistantText, nil))
 	}
-	m.viewport.SetContent(renderMessage(msgs))
+	m.viewport.SetContent(m.renderMessage(msgs))
 }
 
 func (m *Model) refreshLayout() {

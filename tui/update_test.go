@@ -156,7 +156,7 @@ func TestConfigCommandRedactsAPIKey(t *testing.T) {
 		t.Fatalf("config command added %d messages, want none", got)
 	}
 
-	view := renderMessage(m.messages) + "\n" + statusBar(m)
+	view := m.renderMessage(m.messages) + "\n" + statusBar(m)
 	if strings.Contains(view, "sk-secret") {
 		t.Fatalf("config output leaked API key:\n%s", view)
 	}
@@ -273,8 +273,8 @@ func TestModelMenuPersistsActiveProviderModel(t *testing.T) {
 	if got := len(m.messages); got != 0 {
 		t.Fatalf("model command added %d messages, want none", got)
 	}
-	if got := m.config.Provider(appconfig.ProviderDeepseek).Model; got != "deepseek-reasoner" {
-		t.Fatalf("deepseek model = %q, want deepseek-reasoner", got)
+	if got := m.config.Provider(appconfig.ProviderDeepseek).Model; got != "deepseek-v4-flash" {
+		t.Fatalf("deepseek model = %q, want deepseek-v4-flash", got)
 	}
 
 	loaded, err := appconfig.Load(path)

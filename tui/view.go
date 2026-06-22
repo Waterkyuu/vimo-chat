@@ -55,8 +55,10 @@ func (m Model) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, parts...)
 }
 
-// Convert the message list into viewport content for update invocation
-func renderMessage(messages []*schema.Message) string {
+// Convert the message list into viewport content for update invocation.
+// Assistant messages (LLM output) are rendered as markdown; user and tool
+// messages are plain text and are emitted verbatim.
+func (m Model) renderMessage(messages []*schema.Message) string {
 	var b strings.Builder
 	for i, msg := range messages {
 		switch msg.Role {
@@ -66,7 +68,8 @@ func renderMessage(messages []*schema.Message) string {
 
 		case schema.Assistant:
 			b.WriteString(assistantStyle.Render("Vimo: "))
-			b.WriteString(msg.Content)
+			b.WriteString("\n")
+			b.WriteString(m.renderAssistantContent(msg.Content))
 
 		case schema.Tool:
 			b.WriteString(statusStyle.Render("Tool: "))
@@ -84,6 +87,15 @@ func renderMessage(messages []*schema.Message) string {
 	}
 
 	return b.String()
+}
+
+// renderAssistantContent renders markdown for assistant replies, guarding
+// against a nil renderer so the view still works before initialization.
+func (m Model) renderAssistantContent(content string) string {
+	if m.md == nil {
+		return content
+	}
+	return m.md.render(content, m.viewport.Width)
 }
 
 func separator(width int) string {
