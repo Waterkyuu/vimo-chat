@@ -15,15 +15,15 @@
 - internal-comms - 编写各类内部沟通文案
 - karpathy-guidelines - 代码编写简化 skill
 
-1. 内置了三层上下文压缩
+2. 内置了三层上下文压缩
 - 工具结果剔除
 - 本地 Markdown 摘要替换
 - LLM级别摘要
 
-1. 记忆机制
-四层记忆
+3. 记忆机制
+- 四层记忆
 
-1. 内置工具调用
+4. 内置工具调用
 - Shell 命令
 - Git 命令 （diff、log、status）
 - 技能加载
@@ -33,7 +33,7 @@
 - 网络搜索 （配置Key，优先 Exa，降级 Parallel，降级 DuckDuckgo）
 - 浏览器自动化 （配置Key，需要 Browserbase Cloud 账号）
   
-1. 功能
+5. 功能
 - 新建对话
 - 清空对话
 - 历史记录保存
