@@ -128,7 +128,7 @@ func (s *SQLiteStore) ListMemories(ctx context.Context, filter MemoryFilter) ([]
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var memories []*Memory
 	for rows.Next() {
@@ -151,7 +151,7 @@ func (s *SQLiteStore) SearchMemories(ctx context.Context, query string) ([]*Memo
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var memories []*Memory
 	for rows.Next() {
@@ -170,7 +170,7 @@ func (s *SQLiteStore) RecordUsage(ctx context.Context, ids []string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	now := time.Now()
 	for _, id := range ids {
@@ -220,7 +220,7 @@ func (s *SQLiteStore) GetStaleConversations(ctx context.Context, limit int) ([]*
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var convs []*Conversation
 	for rows.Next() {

@@ -35,7 +35,7 @@ func (e *Extractor) ExtractMemoried(ctx context.Context, messages []*schema.Mess
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("Extract memoried: %w", err)
+		return nil, fmt.Errorf("extract memories: %w", err)
 	}
 
 	return parseExtractedMemories(res.Content)

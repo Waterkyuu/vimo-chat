@@ -27,7 +27,7 @@ func NewMemoryService(model *openai.ChatModel) (*Service, error) {
 
 	store, err := NewSQLiteStore(dbPath)
 	if err != nil {
-		return nil, fmt.Errorf("Init memory store: %w", err)
+		return nil, fmt.Errorf("init memory store: %w", err)
 	}
 
 	return &Service{
@@ -106,7 +106,7 @@ func (s *Service) GetContextForPrompt(ctx context.Context) (string, error) {
 	if len(savedFacts) > 0 {
 		sb.WriteString("### Saved facts\n")
 		for _, m := range savedFacts {
-			sb.WriteString(fmt.Sprintf("- %s\n", m.Content))
+			fmt.Fprintf(&sb, "- %s\n", m.Content)
 		}
 		sb.WriteString("\n")
 	}
@@ -115,7 +115,7 @@ func (s *Service) GetContextForPrompt(ctx context.Context) (string, error) {
 		sb.WriteString("### The knowledge learned\n")
 
 		for _, m := range extracted {
-			sb.WriteString(fmt.Sprintf("- %s\n", m.Content))
+			fmt.Fprintf(&sb, "- %s\n", m.Content)
 		}
 		sb.WriteString("\n")
 	}
@@ -144,7 +144,7 @@ func (s *Service) ProcessConversation(ctx context.Context, convID string, messag
 	// Phase 1: Use LLM to extract memory
 	extracted, err := s.extractor.ExtractMemoried(ctx, messages)
 	if err != nil {
-		return fmt.Errorf("Extract memoried: %w", err)
+		return fmt.Errorf("extract memories: %w", err)
 	}
 
 	for _, m := range extracted {
@@ -160,7 +160,7 @@ func (s *Service) ProcessConversation(ctx context.Context, convID string, messag
 	// Phase 2: Gen conversation summary
 	summary, err := s.extractor.SummarizeConversation(ctx, messages)
 	if err != nil {
-		return fmt.Errorf("Summarize: %w", err)
+		return fmt.Errorf("summarize: %w", err)
 	}
 
 	conv.Summary = summary
