@@ -12,7 +12,7 @@ import (
 )
 
 func TestFirstSubmittedUserMessageStaysVisible(t *testing.T) {
-	m := NewModel()
+	m := NewModelWithConfigPath(filepath.Join(t.TempDir(), "config.json"))
 	m.showSplash = false
 	m.config.Providers[appconfig.ProviderOpenAI] = appconfig.ProviderConfig{
 		APIKey: "test-key",
@@ -281,8 +281,8 @@ func TestModelMenuPersistsActiveProviderModel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load returned error: %v", err)
 	}
-	if got := loaded.Provider(appconfig.ProviderDeepseek).Model; got != "deepseek-reasoner" {
-		t.Fatalf("persisted model = %q, want deepseek-reasoner", got)
+	if got := loaded.Provider(appconfig.ProviderDeepseek).Model; got != "deepseek-v4-flash" {
+		t.Fatalf("persisted model = %q, want deepseek-v4-flash", got)
 	}
 }
 
