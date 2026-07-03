@@ -18,7 +18,7 @@ var (
 
 	statusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 
-	selectedStyle = lipgloss.NewStyle().Background(lipgloss.Color("216")).Foreground(lipgloss.Color("0"))
+	selectedStyle = lipgloss.NewStyle().Background(lipgloss.Color("117")).Foreground(lipgloss.Color("0"))
 
 	dialogStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("15")).

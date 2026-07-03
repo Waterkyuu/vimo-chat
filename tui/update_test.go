@@ -95,6 +95,12 @@ func TestCommandPaletteHasPaddingAndBottomRule(t *testing.T) {
 	}
 }
 
+func TestSelectedStyleUsesLightBlueBackground(t *testing.T) {
+	if got, want := selectedStyle.GetBackground(), lipgloss.Color("117"); got != want {
+		t.Fatalf("selected background = %v, want light blue %v", got, want)
+	}
+}
+
 func TestProviderCommandShowsPopup(t *testing.T) {
 	m := NewModelWithConfigPath(filepath.Join(t.TempDir(), "config.json"))
 	m.showSplash = false
