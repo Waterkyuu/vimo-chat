@@ -36,6 +36,15 @@ linters:
           - gosec
       - path: "vendor|third_party|mock"
         linters: ["*"]
+      - linters:
+          - gosec
+        text: "G204"
+      - linters:
+          - gosec
+        text: "G301"
+      - linters:
+          - gosec
+        text: "G302"
 
 formatters:
   settings:

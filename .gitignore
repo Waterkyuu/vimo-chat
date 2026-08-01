@@ -41,3 +41,9 @@ dist/
 
 # Air live reload
 tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+
+docs
